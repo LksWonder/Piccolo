@@ -327,6 +327,10 @@ namespace Piccolo
         {
             if (ImGui::BeginMenu("Menu"))
             {
+                if (ImGui::MenuItem("New Level"))
+                {
+                
+                }
                 if (ImGui::MenuItem("Reload Current Level"))
                 {
                     g_runtime_global_context.m_world_manager->reloadCurrentLevel();
