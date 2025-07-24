@@ -60,13 +60,18 @@ namespace Piccolo
             std::string&& asset_json_text = asset_json.dump();
 
             // write to file
-            asset_json_file << asset_json_text;
+            asset_json_file << asset_json_text; 
             asset_json_file.flush();
+
+            std::ofstream asset_json_file_runtime(getRuntimePath(asset_url));
+            asset_json_file_runtime << asset_json_text;
+            asset_json_file_runtime.flush();
 
             return true;
         }
 
         std::filesystem::path getFullPath(const std::string& relative_path) const;
+        std::filesystem::path getRuntimePath(const std::string& relative_path) const;
 
     };
 } // namespace Piccolo

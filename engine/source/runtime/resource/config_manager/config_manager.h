@@ -12,6 +12,7 @@ namespace Piccolo
         void initialize(const std::filesystem::path& config_file_path);
 
         const std::filesystem::path& getRootFolder() const;
+        const std::filesystem::path& getRuntimeFolder() const;
         const std::filesystem::path& getAssetFolder() const;
         const std::filesystem::path& getSchemaFolder() const;
         const std::filesystem::path& getEditorBigIconPath() const;
@@ -23,11 +24,13 @@ namespace Piccolo
 #endif
 
         const std::string& getDefaultWorldUrl() const;
+        const std::string& getDemoWorldUrl() const;
         const std::string& getGlobalRenderingResUrl() const;
         const std::string& getGlobalParticleResUrl() const;
 
     private:
         std::filesystem::path m_root_folder;
+        std::filesystem::path m_runtime_folder;
         std::filesystem::path m_asset_folder;
         std::filesystem::path m_schema_folder;
         std::filesystem::path m_editor_big_icon_path;
@@ -39,6 +42,7 @@ namespace Piccolo
 #endif
 
         std::string m_default_world_url;
+        std::string m_demo_world_url;
         std::string m_global_rendering_res_url;
         std::string m_global_particle_res_url;
     };

@@ -18,7 +18,11 @@ namespace Piccolo
     void WorldManager::initialize()
     {
         m_is_world_loaded   = false;
-        m_current_world_url = g_runtime_global_context.m_config_manager->getDefaultWorldUrl();
+        m_current_world_url = g_runtime_global_context.m_config_manager->getDemoWorldUrl();
+        if (m_current_world_url == "") 
+        {
+            m_current_world_url = g_runtime_global_context.m_config_manager->getDefaultWorldUrl();
+        }
 
         //debugger
         m_level_debugger = std::make_shared<LevelDebugger>();

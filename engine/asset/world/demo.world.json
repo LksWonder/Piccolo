@@ -1,0 +1,7 @@
+{
+  "name": "DemoWorld",
+  "level_urls": [
+    "asset/level/demo_thinmatrix.level.json"
+  ],
+  "default_level_url": "asset/level/demo_thinmatrix.level.json"
+}

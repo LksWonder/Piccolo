@@ -20,7 +20,11 @@ namespace Piccolo
             {
                 std::string name  = config_line.substr(0, seperate_pos);
                 std::string value = config_line.substr(seperate_pos + 1, config_line.length() - seperate_pos - 1);
-                if (name == "BinaryRootFolder")
+                if (name == "RuntimeRootFolder")
+                {
+                    m_runtime_folder = config_file_path.parent_path() / value;
+                }
+                else if (name == "BinaryRootFolder")
                 {
                     m_root_folder = config_file_path.parent_path() / value;
                 }
@@ -35,6 +39,10 @@ namespace Piccolo
                 else if (name == "DefaultWorld")
                 {
                     m_default_world_url = value;
+                }
+                else if  (name == "DemoWorld")
+                {
+                    m_demo_world_url = value;
                 }
                 else if (name == "BigIconFile")
                 {
@@ -68,6 +76,8 @@ namespace Piccolo
 
     const std::filesystem::path& ConfigManager::getRootFolder() const { return m_root_folder; }
 
+    const std::filesystem::path& ConfigManager::getRuntimeFolder() const { return m_runtime_folder; }
+
     const std::filesystem::path& ConfigManager::getAssetFolder() const { return m_asset_folder; }
 
     const std::filesystem::path& ConfigManager::getSchemaFolder() const { return m_schema_folder; }
@@ -79,6 +89,8 @@ namespace Piccolo
     const std::filesystem::path& ConfigManager::getEditorFontPath() const { return m_editor_font_path; }
 
     const std::string& ConfigManager::getDefaultWorldUrl() const { return m_default_world_url; }
+
+    const std::string& ConfigManager::getDemoWorldUrl() const { return m_demo_world_url; }
 
     const std::string& ConfigManager::getGlobalRenderingResUrl() const { return m_global_rendering_res_url; }
 

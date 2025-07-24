@@ -12,4 +12,9 @@ namespace Piccolo
     {
         return std::filesystem::absolute(g_runtime_global_context.m_config_manager->getRootFolder() / relative_path);
     }
+
+    std::filesystem::path AssetManager::getRuntimePath(const std::string& relative_path) const
+    {
+        return std::filesystem::absolute(g_runtime_global_context.m_config_manager->getRuntimeFolder() / relative_path);
+    }
 } // namespace Piccolo
