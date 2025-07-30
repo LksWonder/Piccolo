@@ -4,7 +4,7 @@
 #include "runtime/function/render/interface/vulkan/vulkan_util.h"
 
 #include <post_process_vert.h>
-#include <tone_mapping_frag.h>
+#include <scan_frag.h>
 
 #include <stdexcept>
 
@@ -63,7 +63,7 @@ namespace Piccolo
         }
 
         RHIShader* vert_shader_module = m_rhi->createShaderModule(POST_PROCESS_VERT);
-        RHIShader* frag_shader_module = m_rhi->createShaderModule(TONE_MAPPING_FRAG);
+        RHIShader* frag_shader_module = m_rhi->createShaderModule(SCAN_FRAG);
 
         RHIPipelineShaderStageCreateInfo vert_pipeline_shader_stage_create_info {};
         vert_pipeline_shader_stage_create_info.sType  = RHI_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -169,7 +169,7 @@ namespace Piccolo
         pipelineInfo.pDepthStencilState  = &depth_stencil_create_info;
         pipelineInfo.layout              = m_render_pipelines[0].layout;
         pipelineInfo.renderPass          = m_framebuffer.render_pass;
-        pipelineInfo.subpass             = _main_camera_subpass_tone_mapping;
+        pipelineInfo.subpass             = _main_camera_subpass_scan;
         pipelineInfo.basePipelineHandle  = RHI_NULL_HANDLE;
         pipelineInfo.pDynamicState       = &dynamic_state_create_info;
 

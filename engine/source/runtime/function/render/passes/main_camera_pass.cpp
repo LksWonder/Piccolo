@@ -333,6 +333,28 @@ namespace Piccolo
         tone_mapping_pass.preserveAttachmentCount = 0;
         tone_mapping_pass.pPreserveAttachments    = NULL;
 
+        // scan begin
+        RHIAttachmentReference scan_pass_input_attachment_reference {};
+        scan_pass_input_attachment_reference.attachment     =
+            &backup_odd_color_attachment_description - attachments;
+        scan_pass_input_attachment_reference.layout     = RHI_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+        RHIAttachmentReference scan_pass_color_attachment_reference {};
+        scan_pass_color_attachment_reference.attachment     =
+            &backup_even_color_attachment_description - attachments;
+        scan_pass_color_attachment_reference.layout     = RHI_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+        RHISubpassDescription& scan_pass = subpasses[_main_camera_subpass_scan];
+        scan_pass.pipelineBindPoint               = RHI_PIPELINE_BIND_POINT_GRAPHICS;
+        scan_pass.inputAttachmentCount            = 1;
+        scan_pass.pInputAttachments               = &scan_pass_input_attachment_reference;
+        scan_pass.colorAttachmentCount            = 1;
+        scan_pass.pColorAttachments               = &scan_pass_color_attachment_reference;
+        scan_pass.pDepthStencilAttachment         = NULL;
+        scan_pass.preserveAttachmentCount         = 0;
+        scan_pass.pPreserveAttachments            = NULL;
+        // scan end
+
         RHIAttachmentReference color_grading_pass_input_attachment_reference {};
         color_grading_pass_input_attachment_reference.attachment =
             &backup_even_color_attachment_description - attachments;
@@ -426,7 +448,7 @@ namespace Piccolo
         combine_ui_pass.preserveAttachmentCount = 0;
         combine_ui_pass.pPreserveAttachments    = NULL;
 
-        RHISubpassDependency dependencies[8] = {};
+        RHISubpassDependency dependencies[9] = {};
 
         RHISubpassDependency& deferred_lighting_pass_depend_on_shadow_map_pass = dependencies[0];
         deferred_lighting_pass_depend_on_shadow_map_pass.srcSubpass           = RHI_SUBPASS_EXTERNAL;
@@ -476,8 +498,21 @@ namespace Piccolo
             RHI_ACCESS_SHADER_READ_BIT | RHI_ACCESS_COLOR_ATTACHMENT_READ_BIT;
         tone_mapping_pass_depend_on_lighting_pass.dependencyFlags = RHI_DEPENDENCY_BY_REGION_BIT;
 
-        RHISubpassDependency& color_grading_pass_depend_on_tone_mapping_pass = dependencies[4];
-        color_grading_pass_depend_on_tone_mapping_pass.srcSubpass           = _main_camera_subpass_tone_mapping;
+        RHISubpassDependency& scan_pass_depend_on_lighting_pass = dependencies[4];
+        scan_pass_depend_on_lighting_pass.srcSubpass            = _main_camera_subpass_tone_mapping;
+        scan_pass_depend_on_lighting_pass.dstSubpass            = _main_camera_subpass_scan;
+        scan_pass_depend_on_lighting_pass.srcStageMask =
+            RHI_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | RHI_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        scan_pass_depend_on_lighting_pass.dstStageMask =
+            RHI_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | RHI_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+        scan_pass_depend_on_lighting_pass.srcAccessMask =
+            RHI_ACCESS_SHADER_WRITE_BIT | RHI_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+        scan_pass_depend_on_lighting_pass.dstAccessMask =
+            RHI_ACCESS_SHADER_READ_BIT | RHI_ACCESS_COLOR_ATTACHMENT_READ_BIT;
+        scan_pass_depend_on_lighting_pass.dependencyFlags = RHI_DEPENDENCY_BY_REGION_BIT;
+
+        RHISubpassDependency& color_grading_pass_depend_on_tone_mapping_pass = dependencies[5];
+        color_grading_pass_depend_on_tone_mapping_pass.srcSubpass            = _main_camera_subpass_scan;
         color_grading_pass_depend_on_tone_mapping_pass.dstSubpass           = _main_camera_subpass_color_grading;
         color_grading_pass_depend_on_tone_mapping_pass.srcStageMask =
             RHI_PIPELINE_STAGE_FRAGMENT_SHADER_BIT | RHI_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
@@ -489,7 +524,7 @@ namespace Piccolo
             RHI_ACCESS_SHADER_READ_BIT | RHI_ACCESS_COLOR_ATTACHMENT_READ_BIT;
         color_grading_pass_depend_on_tone_mapping_pass.dependencyFlags = RHI_DEPENDENCY_BY_REGION_BIT;
 
-        RHISubpassDependency& fxaa_pass_depend_on_color_grading_pass = dependencies[5];
+        RHISubpassDependency& fxaa_pass_depend_on_color_grading_pass = dependencies[6];
         fxaa_pass_depend_on_color_grading_pass.srcSubpass           = _main_camera_subpass_color_grading;
         fxaa_pass_depend_on_color_grading_pass.dstSubpass           = _main_camera_subpass_fxaa;
         fxaa_pass_depend_on_color_grading_pass.srcStageMask =
@@ -501,7 +536,7 @@ namespace Piccolo
         fxaa_pass_depend_on_color_grading_pass.dstAccessMask =
             RHI_ACCESS_SHADER_READ_BIT | RHI_ACCESS_COLOR_ATTACHMENT_READ_BIT;
 
-        RHISubpassDependency& ui_pass_depend_on_fxaa_pass = dependencies[6];
+        RHISubpassDependency& ui_pass_depend_on_fxaa_pass = dependencies[7];
         ui_pass_depend_on_fxaa_pass.srcSubpass           = _main_camera_subpass_fxaa;
         ui_pass_depend_on_fxaa_pass.dstSubpass           = _main_camera_subpass_ui;
         ui_pass_depend_on_fxaa_pass.srcStageMask =
@@ -512,7 +547,7 @@ namespace Piccolo
         ui_pass_depend_on_fxaa_pass.dstAccessMask   = RHI_ACCESS_SHADER_READ_BIT | RHI_ACCESS_COLOR_ATTACHMENT_READ_BIT;
         ui_pass_depend_on_fxaa_pass.dependencyFlags = RHI_DEPENDENCY_BY_REGION_BIT;
 
-        RHISubpassDependency& combine_ui_pass_depend_on_ui_pass = dependencies[7];
+        RHISubpassDependency& combine_ui_pass_depend_on_ui_pass = dependencies[8];
         combine_ui_pass_depend_on_ui_pass.srcSubpass           = _main_camera_subpass_ui;
         combine_ui_pass_depend_on_ui_pass.dstSubpass           = _main_camera_subpass_combine_ui;
         combine_ui_pass_depend_on_ui_pass.srcStageMask =
@@ -1913,6 +1948,7 @@ namespace Piccolo
     void MainCameraPass::draw(ColorGradingPass& color_grading_pass,
                               FXAAPass&         fxaa_pass,
                               ToneMappingPass&  tone_mapping_pass,
+                              ScanPass&         scan_pass,
                               UIPass&           ui_pass,
                               CombineUIPass&    combine_ui_pass,
                               ParticlePass&     particle_pass,
@@ -1971,6 +2007,10 @@ namespace Piccolo
 
         m_rhi->cmdNextSubpassPFN(m_rhi->getCurrentCommandBuffer(), RHI_SUBPASS_CONTENTS_INLINE);
 
+        scan_pass.draw();
+
+        m_rhi->cmdNextSubpassPFN(m_rhi->getCurrentCommandBuffer(), RHI_SUBPASS_CONTENTS_INLINE);
+
         color_grading_pass.draw();
 
         m_rhi->cmdNextSubpassPFN(m_rhi->getCurrentCommandBuffer(), RHI_SUBPASS_CONTENTS_INLINE);
@@ -2014,6 +2054,7 @@ namespace Piccolo
     void MainCameraPass::drawForward(ColorGradingPass& color_grading_pass,
                                      FXAAPass&         fxaa_pass,
                                      ToneMappingPass&  tone_mapping_pass,
+                                     ScanPass&         scan_pass,
                                      UIPass&           ui_pass,
                                      CombineUIPass&    combine_ui_pass,
                                      ParticlePass&     particle_pass,
@@ -2057,6 +2098,10 @@ namespace Piccolo
         m_rhi->cmdNextSubpassPFN(m_rhi->getCurrentCommandBuffer(), RHI_SUBPASS_CONTENTS_INLINE);
 
         tone_mapping_pass.draw();
+
+        m_rhi->cmdNextSubpassPFN(m_rhi->getCurrentCommandBuffer(), RHI_SUBPASS_CONTENTS_INLINE);
+
+        scan_pass.draw();
 
         m_rhi->cmdNextSubpassPFN(m_rhi->getCurrentCommandBuffer(), RHI_SUBPASS_CONTENTS_INLINE);
 

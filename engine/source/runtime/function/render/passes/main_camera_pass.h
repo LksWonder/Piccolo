@@ -8,6 +8,7 @@
 #include "runtime/function/render/passes/tone_mapping_pass.h"
 #include "runtime/function/render/passes/ui_pass.h"
 #include "runtime/function/render/passes/particle_pass.h"
+#include "runtime/function/render/passes/scan_pass.h"
 
 namespace Piccolo
 {
@@ -62,6 +63,7 @@ namespace Piccolo
         void draw(ColorGradingPass& color_grading_pass,
             FXAAPass& fxaa_pass,
             ToneMappingPass& tone_mapping_pass,
+            ScanPass& scan_pass,
             UIPass& ui_pass,
             CombineUIPass& combine_ui_pass,
             ParticlePass& particle_pass,
@@ -70,6 +72,7 @@ namespace Piccolo
         void drawForward(ColorGradingPass& color_grading_pass,
             FXAAPass& fxaa_pass,
             ToneMappingPass& tone_mapping_pass,
+            ScanPass& scan_pass,
             UIPass& ui_pass,
             CombineUIPass& combine_ui_pass,
             ParticlePass& particle_pass,

@@ -13,6 +13,6 @@ void main()
 {
     highp vec3 color = subpassLoad(in_color).rgb;
 
-    out_color = vec4(color, 1.0f);
+    out_color = vec4(color.r, color.g * 0.1f, color.b * 0.1f, 1.0f);
 }
 

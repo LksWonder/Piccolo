@@ -45,6 +45,7 @@ namespace Piccolo
         std::shared_ptr<RenderPassBase> m_color_grading_pass;
         std::shared_ptr<RenderPassBase> m_fxaa_pass;
         std::shared_ptr<RenderPassBase> m_tone_mapping_pass;
+        std::shared_ptr<RenderPassBase> m_scan_pass;
         std::shared_ptr<RenderPassBase> m_ui_pass;
         std::shared_ptr<RenderPassBase> m_combine_ui_pass;
         std::shared_ptr<RenderPassBase> m_pick_pass;
