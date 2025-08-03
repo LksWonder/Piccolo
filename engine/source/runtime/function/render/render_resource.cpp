@@ -164,6 +164,9 @@ namespace Piccolo
         m_particlebillboard_perframe_storage_buffer_object.right_direction  = camera->right();
         m_particlebillboard_perframe_storage_buffer_object.foward_direction = camera->forward();
         m_particlebillboard_perframe_storage_buffer_object.up_direction     = camera->up();
+
+        m_scan_resource_data.scan_distance = 1;
+        m_scan_resource_data.place_holder  = 1;
     }
 
     void RenderResource::createIBLSamplers(std::shared_ptr<RHI> rhi)

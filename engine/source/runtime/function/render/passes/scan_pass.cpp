@@ -17,23 +17,49 @@ namespace Piccolo
         const ScanPassInitInfo* _init_info = static_cast<const ScanPassInitInfo*>(init_info);
         m_framebuffer.render_pass                 = _init_info->render_pass;
 
+        prepareUniformBuffer();
         setupDescriptorSetLayout();
         setupPipelines();
         setupDescriptorSet();
         updateAfterFramebufferRecreate(_init_info->input_attachment);
     }
 
+    void ScanPass::prepareUniformBuffer()
+    {
+        RHIDeviceMemory* d_mem;
+        m_rhi->createBufferAndInitialize(RHI_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+                                         RHI_MEMORY_PROPERTY_HOST_VISIBLE_BIT | RHI_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+                                         m_uniform_buffer,
+                                         d_mem,
+                                         sizeof(m_scan_resource_data));
+
+        if (RHI_SUCCESS != m_rhi->mapMemory(d_mem, 0, RHI_WHOLE_SIZE, 0, &m_uniform_buffer_mapped))
+        {
+            throw std::runtime_error("map billboard uniform buffer");
+        }
+
+        m_scan_resource_data.scan_distance = 1;
+        memcpy(m_uniform_buffer_mapped, &m_scan_resource_data, sizeof(m_scan_resource_data));
+    }
+
     void ScanPass::setupDescriptorSetLayout()
     {
         m_descriptor_infos.resize(1);
 
-        RHIDescriptorSetLayoutBinding post_process_global_layout_bindings[1] = {};
+        RHIDescriptorSetLayoutBinding post_process_global_layout_bindings[2] = {};
 
         RHIDescriptorSetLayoutBinding& post_process_global_layout_input_attachment_binding = post_process_global_layout_bindings[0];
         post_process_global_layout_input_attachment_binding.binding         = 0;
         post_process_global_layout_input_attachment_binding.descriptorType  = RHI_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
         post_process_global_layout_input_attachment_binding.descriptorCount = 1;
         post_process_global_layout_input_attachment_binding.stageFlags      = RHI_SHADER_STAGE_FRAGMENT_BIT;
+
+        RHIDescriptorSetLayoutBinding& depth_texture_binding          = post_process_global_layout_bindings[1];
+        depth_texture_binding.binding                                 = 1;
+        depth_texture_binding.descriptorType                          = RHI_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+        depth_texture_binding.descriptorCount                         = 1;
+        depth_texture_binding.stageFlags                              = RHI_SHADER_STAGE_FRAGMENT_BIT;
+        depth_texture_binding.pImmutableSamplers                      = NULL;
 
         RHIDescriptorSetLayoutCreateInfo post_process_global_layout_create_info;
         post_process_global_layout_create_info.sType = RHI_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
@@ -204,7 +230,7 @@ namespace Piccolo
         post_process_per_frame_input_attachment_info.imageView   = input_attachment;
         post_process_per_frame_input_attachment_info.imageLayout = RHI_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
-        RHIWriteDescriptorSet post_process_descriptor_writes_info[1];
+        RHIWriteDescriptorSet post_process_descriptor_writes_info[2];
 
         RHIWriteDescriptorSet& post_process_descriptor_input_attachment_write_info = post_process_descriptor_writes_info[0];
         post_process_descriptor_input_attachment_write_info.sType           = RHI_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -216,11 +242,36 @@ namespace Piccolo
         post_process_descriptor_input_attachment_write_info.descriptorCount = 1;
         post_process_descriptor_input_attachment_write_info.pImageInfo      = &post_process_per_frame_input_attachment_info;
 
+        RHIDescriptorBufferInfo uniformBufferDescriptor = {m_uniform_buffer, 0, RHI_WHOLE_SIZE};
+        {
+            RHIWriteDescriptorSet& descriptorset = post_process_descriptor_writes_info[1];
+            descriptorset.sType                  = RHI_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+            descriptorset.pNext                  = NULL;
+            descriptorset.dstSet                 = m_descriptor_infos[0].descriptor_set;
+            descriptorset.dstArrayElement        = 0;  // 从别处抄了一个，发现没有这个，没有初始化的话，这个值是随机值。
+            descriptorset.descriptorType         = RHI_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+            descriptorset.dstBinding             = 1;
+            descriptorset.pBufferInfo            = &uniformBufferDescriptor;
+            descriptorset.descriptorCount        = 1;
+        }
+
         m_rhi->updateDescriptorSets(sizeof(post_process_descriptor_writes_info) /
                                     sizeof(post_process_descriptor_writes_info[0]),
                                     post_process_descriptor_writes_info,
                                     0,
                                     NULL);
+    }
+
+    
+    void ScanPass::preparePassData(std::shared_ptr<RenderResourceBase> render_resource)
+    {
+        const RenderResource* vulkan_resource = static_cast<const RenderResource*>(render_resource.get());
+        if (vulkan_resource)
+        {
+            m_scan_resource_data = vulkan_resource->m_scan_resource_data;
+            m_scan_resource_data.scan_distance = 0;
+            memcpy(m_uniform_buffer_mapped, &m_scan_resource_data, sizeof(ScanResourceData));
+        }
     }
 
     void ScanPass::draw()

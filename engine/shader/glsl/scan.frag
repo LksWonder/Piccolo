@@ -6,6 +6,14 @@
 
 layout(input_attachment_index = 0, set = 0, binding = 0) uniform highp subpassInput in_color;
 
+layout(set = 0, binding = 1)  uniform _scan_info
+{
+    uint scan_distance;
+    uint place_holder;
+};
+
+layout(location = 0) in highp vec2 in_uv;
+
 layout(location = 0) out highp vec4 out_color;
 
 
@@ -13,6 +21,6 @@ void main()
 {
     highp vec3 color = subpassLoad(in_color).rgb;
 
-    out_color = vec4(color.r, color.g * 0.1f, color.b * 0.1f, 1.0f);
+    out_color = vec4(color.r, color.g * float(scan_distance), color.b, 1.0f);
 }
 

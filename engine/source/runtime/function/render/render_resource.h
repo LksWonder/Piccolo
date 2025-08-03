@@ -70,6 +70,12 @@ namespace Piccolo
         RHIFormat _color_grading_LUT_texture_image_format;
     };
 
+    struct ScanResourceData
+    {
+        uint32_t scan_distance;
+        uint32_t place_holder;
+    };
+
     struct StorageBuffer
     {
         // limits
@@ -99,6 +105,7 @@ namespace Piccolo
         IBLResource          _ibl_resource;
         ColorGradingResource _color_grading_resource;
         StorageBuffer        _storage_buffer;
+        //ScanResourceData     _scan_resource_data;
     };
 
     class RenderResource : public RenderResourceBase
@@ -143,6 +150,9 @@ namespace Piccolo
         MeshInefficientPickPerframeStorageBufferObject m_mesh_inefficient_pick_perframe_storage_buffer_object;
         ParticleBillboardPerframeStorageBufferObject   m_particlebillboard_perframe_storage_buffer_object;
         ParticleCollisionPerframeStorageBufferObject   m_particle_collision_perframe_storage_buffer_object;
+
+        // scan buffer objects
+        ScanResourceData m_scan_resource_data;
 
         // cached mesh and material
         std::map<size_t, VulkanMesh>        m_vulkan_meshes;
