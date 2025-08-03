@@ -12,6 +12,9 @@ layout(set = 0, binding = 1)  uniform _scan_info
     uint place_holder;
 };
 
+layout(set = 0, binding = 2) uniform sampler2D normal_sampler;
+layout(set = 0, binding = 3) uniform sampler2D depth_sampler;
+
 layout(location = 0) in highp vec2 in_uv;
 
 layout(location = 0) out highp vec4 out_color;
@@ -21,6 +24,7 @@ void main()
 {
     highp vec3 color = subpassLoad(in_color).rgb;
 
-    out_color = vec4(color.r, color.g * float(scan_distance), color.b, 1.0f);
+    highp vec4 depth_color = texture(depth_sampler, in_uv);
+    out_color = vec4(depth_color.r, depth_color.g * float(scan_distance), depth_color.b, 1.0f);
 }
 

@@ -95,6 +95,8 @@ namespace Piccolo
 
         void setParticlePass(std::shared_ptr<ParticlePass> pass);
 
+        void setScanPass(std::shared_ptr<ScanPass> pass);
+
     private:
         void setupParticlePass();
         void setupAttachments();
@@ -122,5 +124,6 @@ namespace Piccolo
     private:
         std::vector<RHIFramebuffer*> m_swapchain_framebuffers;
         std::shared_ptr<ParticlePass> m_particle_pass;
+        std::shared_ptr<ScanPass>     m_scan_pass;
     };
 } // namespace Piccolo

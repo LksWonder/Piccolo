@@ -54,6 +54,7 @@ namespace Piccolo
         std::shared_ptr<MainCameraPass> main_camera_pass = std::static_pointer_cast<MainCameraPass>(m_main_camera_pass);
         std::shared_ptr<RenderPass>     _main_camera_pass = std::static_pointer_cast<RenderPass>(m_main_camera_pass);
         std::shared_ptr<ParticlePass> particle_pass = std::static_pointer_cast<ParticlePass>(m_particle_pass);
+        std::shared_ptr<ScanPass>       scan_pass         = std::static_pointer_cast<ScanPass>(m_scan_pass);
 
         ParticlePassInitInfo particle_init_info{};
         particle_init_info.m_particle_manager = g_runtime_global_context.m_particle_manager;
@@ -67,6 +68,7 @@ namespace Piccolo
         MainCameraPassInitInfo main_camera_init_info;
         main_camera_init_info.enble_fxaa = init_info.enable_fxaa;
         main_camera_pass->setParticlePass(particle_pass);
+        main_camera_pass->setScanPass(scan_pass);
         m_main_camera_pass->initialize(&main_camera_init_info);
 
         std::static_pointer_cast<ParticlePass>(m_particle_pass)->setupParticlePass();
@@ -172,6 +174,8 @@ namespace Piccolo
         vulkan_rhi->submitRendering(std::bind(&RenderPipeline::passUpdateAfterRecreateSwapchain, this));
         static_cast<ParticlePass*>(m_particle_pass.get())->copyNormalAndDepthImage();
         static_cast<ParticlePass*>(m_particle_pass.get())->simulate();
+
+        static_cast<ScanPass*>(m_scan_pass.get())->copyNormalAndDepthImage();
     }
 
     void RenderPipeline::deferredRender(std::shared_ptr<RHI> rhi, std::shared_ptr<RenderResourceBase> render_resource)
@@ -223,6 +227,8 @@ namespace Piccolo
         vulkan_rhi->submitRendering(std::bind(&RenderPipeline::passUpdateAfterRecreateSwapchain, this));
         static_cast<ParticlePass*>(m_particle_pass.get())->copyNormalAndDepthImage();
         static_cast<ParticlePass*>(m_particle_pass.get())->simulate();
+
+        static_cast<ScanPass*>(m_scan_pass.get())->copyNormalAndDepthImage();
     }
 
     void RenderPipeline::passUpdateAfterRecreateSwapchain()

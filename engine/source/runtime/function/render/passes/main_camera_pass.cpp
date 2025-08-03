@@ -2765,8 +2765,12 @@ namespace Piccolo
                                                 m_framebuffer.attachments[_main_camera_pass_gbuffer_a].image);
 
         m_particle_pass->setRenderPassHandle(m_framebuffer.render_pass);
+
+        m_scan_pass->setDepthAndNormalImage(m_rhi->getDepthImageInfo().depth_image,
+                                            m_framebuffer.attachments[_main_camera_pass_gbuffer_a].image);
     }
 
     void MainCameraPass::setParticlePass(std::shared_ptr<ParticlePass> pass) { m_particle_pass = pass; }
 
+    void MainCameraPass::setScanPass(std::shared_ptr<ScanPass> pass) { m_scan_pass = pass; }
 } // namespace Piccolo
