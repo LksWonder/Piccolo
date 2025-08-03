@@ -74,6 +74,8 @@ namespace Piccolo
     {
         uint32_t scan_distance;
         uint32_t place_holder;
+        float    z_far;
+        float    z_near;
     };
 
     struct StorageBuffer

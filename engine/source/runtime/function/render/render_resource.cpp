@@ -167,6 +167,8 @@ namespace Piccolo
 
         m_scan_resource_data.scan_distance = 1;
         m_scan_resource_data.place_holder  = 1;
+        m_scan_resource_data.z_far         = camera->m_zfar;
+        m_scan_resource_data.z_near        = camera->m_znear;
     }
 
     void RenderResource::createIBLSamplers(std::shared_ptr<RHI> rhi)
