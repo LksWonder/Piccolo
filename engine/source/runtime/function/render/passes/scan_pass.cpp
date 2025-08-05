@@ -19,11 +19,11 @@ namespace Piccolo
 
         createCommandBuffer();
         prepareUniformBuffer();
-        recreateImageView();
+        // recreateImageView();
         setupDescriptorSetLayout();
         setupPipelines();
         setupDescriptorSet();
-        updateAfterFramebufferRecreate(_init_info->input_attachment);
+        updateAfterFramebufferRecreate(_init_info->input_attachment, _init_info->depth_input_attachment);
     }
 
     void ScanPass::prepareUniformBuffer()
@@ -48,7 +48,7 @@ namespace Piccolo
     {
         m_descriptor_infos.resize(1);
 
-        RHIDescriptorSetLayoutBinding post_process_global_layout_bindings[4] = {};
+        RHIDescriptorSetLayoutBinding post_process_global_layout_bindings[3] = {};
 
         RHIDescriptorSetLayoutBinding& post_process_global_layout_input_attachment_binding = post_process_global_layout_bindings[0];
         post_process_global_layout_input_attachment_binding.binding         = 0;
@@ -56,8 +56,15 @@ namespace Piccolo
         post_process_global_layout_input_attachment_binding.descriptorCount = 1;
         post_process_global_layout_input_attachment_binding.stageFlags      = RHI_SHADER_STAGE_FRAGMENT_BIT;
 
-        RHIDescriptorSetLayoutBinding& depth_texture_binding          = post_process_global_layout_bindings[1];
-        depth_texture_binding.binding                                 = 1;
+        RHIDescriptorSetLayoutBinding& post_process_global_layout_input_depth_attachment_binding =
+            post_process_global_layout_bindings[1];
+        post_process_global_layout_input_depth_attachment_binding.binding   = 1;
+        post_process_global_layout_input_depth_attachment_binding.descriptorType = RHI_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
+        post_process_global_layout_input_depth_attachment_binding.descriptorCount = 1;
+        post_process_global_layout_input_depth_attachment_binding.stageFlags     = RHI_SHADER_STAGE_FRAGMENT_BIT;
+
+        RHIDescriptorSetLayoutBinding& depth_texture_binding          = post_process_global_layout_bindings[2];
+        depth_texture_binding.binding                                 = 2;
         depth_texture_binding.descriptorType                          = RHI_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
         depth_texture_binding.descriptorCount                         = 1;
         depth_texture_binding.stageFlags                              = RHI_SHADER_STAGE_FRAGMENT_BIT;
@@ -70,24 +77,24 @@ namespace Piccolo
         post_process_global_layout_create_info.bindingCount = sizeof(post_process_global_layout_bindings) / sizeof(post_process_global_layout_bindings[0]);
         post_process_global_layout_create_info.pBindings = post_process_global_layout_bindings;
 
-        // scene depth and normal binding
-        {
-            RHIDescriptorSetLayoutBinding& gbuffer_normal_global_layout_input_attachment_binding =
-                post_process_global_layout_bindings[2];
-            gbuffer_normal_global_layout_input_attachment_binding.binding         = 2;
-            gbuffer_normal_global_layout_input_attachment_binding.descriptorType =
-                RHI_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            gbuffer_normal_global_layout_input_attachment_binding.descriptorCount = 1;
-            gbuffer_normal_global_layout_input_attachment_binding.stageFlags      = RHI_SHADER_STAGE_FRAGMENT_BIT;
+        //// scene depth and normal binding
+        //{
+        //    RHIDescriptorSetLayoutBinding& gbuffer_normal_global_layout_input_attachment_binding =
+        //        post_process_global_layout_bindings[3];
+        //    gbuffer_normal_global_layout_input_attachment_binding.binding         = 3;
+        //    gbuffer_normal_global_layout_input_attachment_binding.descriptorType =
+        //        RHI_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        //    gbuffer_normal_global_layout_input_attachment_binding.descriptorCount = 1;
+        //    gbuffer_normal_global_layout_input_attachment_binding.stageFlags      = RHI_SHADER_STAGE_FRAGMENT_BIT;
 
-            RHIDescriptorSetLayoutBinding& gbuffer_depth_global_layout_input_attachment_binding =
-                post_process_global_layout_bindings[3];
-            gbuffer_depth_global_layout_input_attachment_binding.binding = 3;
-            gbuffer_depth_global_layout_input_attachment_binding.descriptorType =
-                RHI_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-            gbuffer_depth_global_layout_input_attachment_binding.descriptorCount = 1;
-            gbuffer_depth_global_layout_input_attachment_binding.stageFlags      = RHI_SHADER_STAGE_FRAGMENT_BIT;
-        }
+        //    RHIDescriptorSetLayoutBinding& gbuffer_depth_global_layout_input_attachment_binding =
+        //        post_process_global_layout_bindings[4];
+        //    gbuffer_depth_global_layout_input_attachment_binding.binding = 4;
+        //    gbuffer_depth_global_layout_input_attachment_binding.descriptorType =
+        //        RHI_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        //    gbuffer_depth_global_layout_input_attachment_binding.descriptorCount = 1;
+        //    gbuffer_depth_global_layout_input_attachment_binding.stageFlags      = RHI_SHADER_STAGE_FRAGMENT_BIT;
+        //}
 
         if (RHI_SUCCESS != m_rhi->createDescriptorSetLayout(&post_process_global_layout_create_info, m_descriptor_infos[0].layout))
         {
@@ -244,16 +251,16 @@ namespace Piccolo
         }
     }
 
-    void ScanPass::updateAfterFramebufferRecreate(RHIImageView* input_attachment)
+    void ScanPass::updateAfterFramebufferRecreate(RHIImageView* input_attachment, RHIImageView* depth_attachment)
     {
-        recreateImageView();
+        //recreateImageView();
 
         RHIDescriptorImageInfo post_process_per_frame_input_attachment_info = {};
         post_process_per_frame_input_attachment_info.sampler     = m_rhi->getOrCreateDefaultSampler(Default_Sampler_Nearest);
         post_process_per_frame_input_attachment_info.imageView   = input_attachment;
         post_process_per_frame_input_attachment_info.imageLayout = RHI_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
-        RHIWriteDescriptorSet post_process_descriptor_writes_info[4];
+        RHIWriteDescriptorSet post_process_descriptor_writes_info[3];
 
         RHIWriteDescriptorSet& post_process_descriptor_input_attachment_write_info = post_process_descriptor_writes_info[0];
         post_process_descriptor_input_attachment_write_info.sType           = RHI_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -265,101 +272,119 @@ namespace Piccolo
         post_process_descriptor_input_attachment_write_info.descriptorCount = 1;
         post_process_descriptor_input_attachment_write_info.pImageInfo      = &post_process_per_frame_input_attachment_info;
 
+        RHIDescriptorImageInfo post_process_per_frame_depth_input_attachment_info = {};
+        post_process_per_frame_depth_input_attachment_info.sampler =
+            m_rhi->getOrCreateDefaultSampler(Default_Sampler_Nearest);
+        post_process_per_frame_depth_input_attachment_info.imageView   = depth_attachment;
+        post_process_per_frame_depth_input_attachment_info.imageLayout = RHI_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+        RHIWriteDescriptorSet& post_process_descriptor_depth_input_attachment_write_info =
+            post_process_descriptor_writes_info[1];
+        post_process_descriptor_depth_input_attachment_write_info.sType     = RHI_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        post_process_descriptor_depth_input_attachment_write_info.pNext     = NULL;
+        post_process_descriptor_depth_input_attachment_write_info.dstSet    = m_descriptor_infos[0].descriptor_set;
+        post_process_descriptor_depth_input_attachment_write_info.dstBinding = 1;
+        post_process_descriptor_depth_input_attachment_write_info.dstArrayElement = 0;
+        post_process_descriptor_depth_input_attachment_write_info.descriptorType = RHI_DESCRIPTOR_TYPE_INPUT_ATTACHMENT;
+        post_process_descriptor_depth_input_attachment_write_info.descriptorCount = 1;
+        post_process_descriptor_depth_input_attachment_write_info.pImageInfo =
+            &post_process_per_frame_depth_input_attachment_info;
+
         RHIDescriptorBufferInfo uniformBufferDescriptor = {m_uniform_buffer, 0, RHI_WHOLE_SIZE};
         {
-            RHIWriteDescriptorSet& descriptorset = post_process_descriptor_writes_info[1];
+            RHIWriteDescriptorSet& descriptorset = post_process_descriptor_writes_info[2];
             descriptorset.sType                  = RHI_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
             descriptorset.pNext                  = NULL;
             descriptorset.dstSet                 = m_descriptor_infos[0].descriptor_set;
             descriptorset.dstArrayElement        = 0;  // 从别处抄了一个，发现没有这个，没有初始化的话，这个值是随机值。
             descriptorset.descriptorType         = RHI_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-            descriptorset.dstBinding             = 1;
+            descriptorset.dstBinding             = 2;
             descriptorset.pBufferInfo            = &uniformBufferDescriptor;
             descriptorset.descriptorCount        = 1;
         }
 
-        {
-            RHISampler*          sampler0;
-            RHISamplerCreateInfo samplerCreateInfo {};
-            samplerCreateInfo.sType            = RHI_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-            samplerCreateInfo.maxAnisotropy    = 1.0f;
-            samplerCreateInfo.anisotropyEnable = true;
-            samplerCreateInfo.magFilter        = RHI_FILTER_NEAREST;
-            samplerCreateInfo.minFilter        = RHI_FILTER_NEAREST;
-            samplerCreateInfo.mipmapMode       = RHI_SAMPLER_MIPMAP_MODE_LINEAR;
-            samplerCreateInfo.addressModeU     = RHI_SAMPLER_ADDRESS_MODE_REPEAT;
-            samplerCreateInfo.addressModeV     = RHI_SAMPLER_ADDRESS_MODE_REPEAT;
-            samplerCreateInfo.addressModeW     = RHI_SAMPLER_ADDRESS_MODE_REPEAT;
-            samplerCreateInfo.mipLodBias       = 0.0f;
-            samplerCreateInfo.compareOp        = RHI_COMPARE_OP_NEVER;
-            samplerCreateInfo.minLod           = 0.0f;
-            samplerCreateInfo.maxLod           = 0.0f;
-            samplerCreateInfo.borderColor      = RHI_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
-            if (RHI_SUCCESS != m_rhi->createSampler(&samplerCreateInfo, sampler0))
-            {
-                throw std::runtime_error("create sampler error");
-            }
+        //{
+        //    RHISampler*          sampler0;
+        //    RHISamplerCreateInfo samplerCreateInfo {};
+        //    samplerCreateInfo.sType            = RHI_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+        //    samplerCreateInfo.maxAnisotropy    = 1.0f;
+        //    samplerCreateInfo.anisotropyEnable = true;
+        //    samplerCreateInfo.magFilter        = RHI_FILTER_NEAREST;
+        //    samplerCreateInfo.minFilter        = RHI_FILTER_NEAREST;
+        //    samplerCreateInfo.mipmapMode       = RHI_SAMPLER_MIPMAP_MODE_LINEAR;
+        //    samplerCreateInfo.addressModeU     = RHI_SAMPLER_ADDRESS_MODE_REPEAT;
+        //    samplerCreateInfo.addressModeV     = RHI_SAMPLER_ADDRESS_MODE_REPEAT;
+        //    samplerCreateInfo.addressModeW     = RHI_SAMPLER_ADDRESS_MODE_REPEAT;
+        //    samplerCreateInfo.mipLodBias       = 0.0f;
+        //    samplerCreateInfo.compareOp        = RHI_COMPARE_OP_NEVER;
+        //    samplerCreateInfo.minLod           = 0.0f;
+        //    samplerCreateInfo.maxLod           = 0.0f;
+        //    samplerCreateInfo.borderColor      = RHI_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
+        //    if (RHI_SUCCESS != m_rhi->createSampler(&samplerCreateInfo, sampler0))
+        //    {
+        //        throw std::runtime_error("create sampler error");
+        //    }
 
-            RHIDescriptorImageInfo gbuffer_normal_descriptor_image_info = {};
-            gbuffer_normal_descriptor_image_info.sampler                = sampler0;
-            gbuffer_normal_descriptor_image_info.imageView              = m_src_normal_image_view;
-            gbuffer_normal_descriptor_image_info.imageLayout            = RHI_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-            {
+        //    RHIDescriptorImageInfo gbuffer_normal_descriptor_image_info = {};
+        //    gbuffer_normal_descriptor_image_info.sampler                = sampler0;
+        //    gbuffer_normal_descriptor_image_info.imageView              = m_src_normal_image_view;
+        //    gbuffer_normal_descriptor_image_info.imageLayout            = RHI_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        //    {
 
-                RHIWriteDescriptorSet& gbuffer_normal_descriptor_input_attachment_write_info =
-                    post_process_descriptor_writes_info[2];
-                gbuffer_normal_descriptor_input_attachment_write_info.sType  = RHI_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-                gbuffer_normal_descriptor_input_attachment_write_info.pNext  = NULL;
-                gbuffer_normal_descriptor_input_attachment_write_info.dstSet = m_descriptor_infos[0].descriptor_set;
-                gbuffer_normal_descriptor_input_attachment_write_info.dstBinding      = 2;
-                gbuffer_normal_descriptor_input_attachment_write_info.dstArrayElement = 0;
-                gbuffer_normal_descriptor_input_attachment_write_info.descriptorType =
-                    RHI_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-                gbuffer_normal_descriptor_input_attachment_write_info.descriptorCount = 1;
-                gbuffer_normal_descriptor_input_attachment_write_info.pImageInfo =
-                    &gbuffer_normal_descriptor_image_info;
-            }
+        //        RHIWriteDescriptorSet& gbuffer_normal_descriptor_input_attachment_write_info =
+        //            post_process_descriptor_writes_info[3];
+        //        gbuffer_normal_descriptor_input_attachment_write_info.sType  = RHI_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        //        gbuffer_normal_descriptor_input_attachment_write_info.pNext  = NULL;
+        //        gbuffer_normal_descriptor_input_attachment_write_info.dstSet = m_descriptor_infos[0].descriptor_set;
+        //        gbuffer_normal_descriptor_input_attachment_write_info.dstBinding      = 3;
+        //        gbuffer_normal_descriptor_input_attachment_write_info.dstArrayElement = 0;
+        //        gbuffer_normal_descriptor_input_attachment_write_info.descriptorType =
+        //            RHI_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        //        gbuffer_normal_descriptor_input_attachment_write_info.descriptorCount = 1;
+        //        gbuffer_normal_descriptor_input_attachment_write_info.pImageInfo =
+        //            &gbuffer_normal_descriptor_image_info;
+        //    }
 
-            RHISampler*          sampler;
-            //RHISamplerCreateInfo samplerCreateInfo {};
-            samplerCreateInfo.sType            = RHI_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-            samplerCreateInfo.maxAnisotropy    = 1.0f;
-            samplerCreateInfo.anisotropyEnable = true;
-            samplerCreateInfo.magFilter        = RHI_FILTER_NEAREST;
-            samplerCreateInfo.minFilter        = RHI_FILTER_NEAREST;
-            samplerCreateInfo.mipmapMode       = RHI_SAMPLER_MIPMAP_MODE_LINEAR;
-            samplerCreateInfo.addressModeU     = RHI_SAMPLER_ADDRESS_MODE_REPEAT;
-            samplerCreateInfo.addressModeV     = RHI_SAMPLER_ADDRESS_MODE_REPEAT;
-            samplerCreateInfo.addressModeW     = RHI_SAMPLER_ADDRESS_MODE_REPEAT;
-            samplerCreateInfo.mipLodBias       = 0.0f;
-            samplerCreateInfo.compareOp        = RHI_COMPARE_OP_NEVER;
-            samplerCreateInfo.minLod           = 0.0f;
-            samplerCreateInfo.maxLod           = 0.0f;
-            samplerCreateInfo.borderColor      = RHI_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
-            if (RHI_SUCCESS != m_rhi->createSampler(&samplerCreateInfo, sampler))
-            {
-                throw std::runtime_error("create sampler error");
-            }
+        //    RHISampler*          sampler;
+        //    //RHISamplerCreateInfo samplerCreateInfo {};
+        //    samplerCreateInfo.sType            = RHI_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+        //    samplerCreateInfo.maxAnisotropy    = 1.0f;
+        //    samplerCreateInfo.anisotropyEnable = true;
+        //    samplerCreateInfo.magFilter        = RHI_FILTER_NEAREST;
+        //    samplerCreateInfo.minFilter        = RHI_FILTER_NEAREST;
+        //    samplerCreateInfo.mipmapMode       = RHI_SAMPLER_MIPMAP_MODE_LINEAR;
+        //    samplerCreateInfo.addressModeU     = RHI_SAMPLER_ADDRESS_MODE_REPEAT;
+        //    samplerCreateInfo.addressModeV     = RHI_SAMPLER_ADDRESS_MODE_REPEAT;
+        //    samplerCreateInfo.addressModeW     = RHI_SAMPLER_ADDRESS_MODE_REPEAT;
+        //    samplerCreateInfo.mipLodBias       = 0.0f;
+        //    samplerCreateInfo.compareOp        = RHI_COMPARE_OP_NEVER;
+        //    samplerCreateInfo.minLod           = 0.0f;
+        //    samplerCreateInfo.maxLod           = 0.0f;
+        //    samplerCreateInfo.borderColor      = RHI_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
+        //    if (RHI_SUCCESS != m_rhi->createSampler(&samplerCreateInfo, sampler))
+        //    {
+        //        throw std::runtime_error("create sampler error");
+        //    }
 
-            RHIDescriptorImageInfo depth_descriptor_image_info = {};
-            depth_descriptor_image_info.sampler                = sampler;
-            depth_descriptor_image_info.imageView              = m_src_depth_image_view;
-            depth_descriptor_image_info.imageLayout            = RHI_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        //    RHIDescriptorImageInfo depth_descriptor_image_info = {};
+        //    depth_descriptor_image_info.sampler                = sampler;
+        //    depth_descriptor_image_info.imageView              = m_src_depth_image_view;
+        //    depth_descriptor_image_info.imageLayout            = RHI_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
 
-            {
-                RHIWriteDescriptorSet& depth_descriptor_input_attachment_write_info =
-                    post_process_descriptor_writes_info[3];
-                depth_descriptor_input_attachment_write_info.sType           = RHI_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-                depth_descriptor_input_attachment_write_info.pNext           = NULL;
-                depth_descriptor_input_attachment_write_info.dstSet          = m_descriptor_infos[0].descriptor_set;
-                depth_descriptor_input_attachment_write_info.dstBinding      = 3;
-                depth_descriptor_input_attachment_write_info.dstArrayElement = 0;
-                depth_descriptor_input_attachment_write_info.descriptorType =
-                    RHI_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-                depth_descriptor_input_attachment_write_info.descriptorCount = 1;
-                depth_descriptor_input_attachment_write_info.pImageInfo      = &depth_descriptor_image_info;
-            }
-        }
+        //    {
+        //        RHIWriteDescriptorSet& depth_descriptor_input_attachment_write_info =
+        //            post_process_descriptor_writes_info[4];
+        //        depth_descriptor_input_attachment_write_info.sType           = RHI_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+        //        depth_descriptor_input_attachment_write_info.pNext           = NULL;
+        //        depth_descriptor_input_attachment_write_info.dstSet          = m_descriptor_infos[0].descriptor_set;
+        //        depth_descriptor_input_attachment_write_info.dstBinding      = 4;
+        //        depth_descriptor_input_attachment_write_info.dstArrayElement = 0;
+        //        depth_descriptor_input_attachment_write_info.descriptorType =
+        //            RHI_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+        //        depth_descriptor_input_attachment_write_info.descriptorCount = 1;
+        //        depth_descriptor_input_attachment_write_info.pImageInfo      = &depth_descriptor_image_info;
+        //    }
+        //}
         m_rhi->updateDescriptorSets(sizeof(post_process_descriptor_writes_info) /
                                     sizeof(post_process_descriptor_writes_info[0]),
                                     post_process_descriptor_writes_info,
@@ -452,6 +477,10 @@ namespace Piccolo
 
     void ScanPass::copyNormalAndDepthImage() 
     {
+        if (true)
+        {
+            return;
+        }
         uint8_t index =
             (m_rhi->getCurrentFrameIndex() + m_rhi->getMaxFramesInFlight() - 1) % m_rhi->getMaxFramesInFlight();
 

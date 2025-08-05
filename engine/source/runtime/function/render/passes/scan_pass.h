@@ -10,6 +10,7 @@ namespace Piccolo
     {
         RHIRenderPass* render_pass;
         RHIImageView*  input_attachment;
+        RHIImageView*  depth_input_attachment;
     };
 
     class ScanPass : public RenderPass
@@ -19,7 +20,7 @@ namespace Piccolo
         void draw() override final;
 
         void preparePassData(std::shared_ptr<RenderResourceBase> render_resource) override final;
-        void updateAfterFramebufferRecreate(RHIImageView* input_attachment);
+        void updateAfterFramebufferRecreate(RHIImageView* input_attachment, RHIImageView* depth_attachment);
         
         void createCommandBuffer();
 

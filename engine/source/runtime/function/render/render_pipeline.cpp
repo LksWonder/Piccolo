@@ -92,6 +92,7 @@ namespace Piccolo
         scan_init_info.render_pass = _main_camera_pass->getRenderPass();
         scan_init_info.input_attachment =
             _main_camera_pass->getFramebufferImageViews()[_main_camera_pass_backup_buffer_odd];
+        scan_init_info.depth_input_attachment = m_rhi->getDepthImageInfo().depth_image_view;
         m_scan_pass->initialize(&scan_init_info);
 
         ColorGradingPassInitInfo color_grading_init_info;
@@ -246,7 +247,8 @@ namespace Piccolo
         tone_mapping_pass.updateAfterFramebufferRecreate(
             main_camera_pass.getFramebufferImageViews()[_main_camera_pass_backup_buffer_odd]);
         scan_pass.updateAfterFramebufferRecreate(
-            main_camera_pass.getFramebufferImageViews()[_main_camera_pass_backup_buffer_odd]);
+            main_camera_pass.getFramebufferImageViews()[_main_camera_pass_backup_buffer_odd],
+            main_camera_pass.getFramebufferImageViews()[_main_camera_pass_depth]);
         color_grading_pass.updateAfterFramebufferRecreate(
             main_camera_pass.getFramebufferImageViews()[_main_camera_pass_backup_buffer_even]);
         fxaa_pass.updateAfterFramebufferRecreate(
