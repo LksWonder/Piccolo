@@ -51,7 +51,7 @@ void main()
     //}
 
 
-    out_color = vec4(vec3(depth_attacment_color), 1.0);
-    // out_color = vec4(color.r, color.g, color.b, 1.0f); //  * float(scan_distance)
+    // out_color = vec4(vec3(depth_attacment_color), 1.0);
+    out_color = vec4(color.r, color.g, color.b, 1.0f); //  * float(scan_distance)
 }
 

@@ -276,7 +276,8 @@ namespace Piccolo
         post_process_per_frame_depth_input_attachment_info.sampler =
             m_rhi->getOrCreateDefaultSampler(Default_Sampler_Nearest);
         post_process_per_frame_depth_input_attachment_info.imageView   = depth_attachment;
-        post_process_per_frame_depth_input_attachment_info.imageLayout = RHI_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+        post_process_per_frame_depth_input_attachment_info.imageLayout =
+            RHI_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
         RHIWriteDescriptorSet& post_process_descriptor_depth_input_attachment_write_info =
             post_process_descriptor_writes_info[1];

@@ -226,7 +226,7 @@ namespace Piccolo
         depth_attachment_description.stencilLoadOp            = RHI_ATTACHMENT_LOAD_OP_DONT_CARE;
         depth_attachment_description.stencilStoreOp           = RHI_ATTACHMENT_STORE_OP_DONT_CARE;
         depth_attachment_description.initialLayout            = RHI_IMAGE_LAYOUT_UNDEFINED;
-        depth_attachment_description.finalLayout              = RHI_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        depth_attachment_description.finalLayout               = RHI_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
         RHIAttachmentDescription& swapchain_image_attachment_description =
             attachments[_main_camera_pass_swap_chain_image];
